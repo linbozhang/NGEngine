@@ -1,8 +1,8 @@
-#include "framework.h"
+#include "stdafx.h"
 #include "Win32Application.h"
-
+#include <windowsx.h>
 HWND Win32Application::mHwnd = nullptr;
-int Win32Application::Run(HINSTANCE hInstance, int nCmdShow) {
+int Win32Application::Run(D3DAppBase* app, HINSTANCE hInstance, int nCmdShow) {
 	int argc;
 	LPWSTR* argv = CommandLineToArgvW(GetCommandLineW(), &argc);
 	LocalFree(argv);
@@ -14,12 +14,12 @@ int Win32Application::Run(HINSTANCE hInstance, int nCmdShow) {
 	windowClass.hCursor = LoadCursor(NULL, IDC_ARROW);
 	windowClass.lpszClassName = L"NGEngine";
 	RegisterClassEx(&windowClass);
-	RECT windowRect = { 0,0,static_cast<LONG>(1280),static_cast<LONG>(720) };
+	RECT windowRect = { 0,0,static_cast<LONG>(app->GetWidht()),static_cast<LONG>(app->GetHeight()) };
 	AdjustWindowRect(&windowRect, WS_OVERLAPPEDWINDOW, FALSE);
 
 	mHwnd = CreateWindow(
 		windowClass.lpszClassName,
-		L"",
+		app->GetTitle(),
 		WS_OVERLAPPEDWINDOW,
 		CW_USEDEFAULT,
 		CW_USEDEFAULT,
@@ -28,8 +28,9 @@ int Win32Application::Run(HINSTANCE hInstance, int nCmdShow) {
 		nullptr,
 		nullptr,
 		hInstance,
-		nullptr,
+		app,
 		);
+	app->OnInit();
 	ShowWindow(mHwnd, nCmdShow);
 	UpdateWindow(mHwnd);
 	MSG msg = {};
@@ -39,13 +40,17 @@ int Win32Application::Run(HINSTANCE hInstance, int nCmdShow) {
 			DispatchMessage(&msg);
 		}
 		else {
-
+			app->OnUpdate();
+			app->OnRender();
 		}
 	}
+	app->OnDestroy();
 	return static_cast<char>(msg.wParam);
 }
 
 LRESULT Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam) {
+	
+	D3DAppBase* app = reinterpret_cast<D3DAppBase*>(GetWindowLongPtr(hWnd, GWLP_USERDATA));
 	switch (message) {
 	case WM_CREATE:
 	{
@@ -54,18 +59,35 @@ LRESULT Win32Application::WindowProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 	}
 	return 0;
 	case WM_MOUSEMOVE:
+		if (app) {
+			app->OnMouseMove(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		}
 		return 0;
 	case WM_LBUTTONUP:
 	case WM_RBUTTONUP:
 	case WM_MBUTTONUP:
+		if (app) {
+			app->OnMouseUp(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		}
 		return 0;
 	case WM_LBUTTONDOWN:
 	case WM_RBUTTONDOWN:
 	case WM_MBUTTONDOWN:
+		if (app) {
+			app->OnMouseDown(wParam, GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam));
+		}
 		return 0;
 	case WM_KEYDOWN:
+		if (app)
+		{
+			app->OnKeyDown(static_cast<UINT8>(wParam));
+		}
 		return 0;
 	case WM_KEYUP:
+		if (app)
+		{
+			app->OnKeyUp(static_cast<UINT8>(wParam));
+		}
 		return 0;
 	case WM_DESTROY:
 		PostQuitMessage(0);
