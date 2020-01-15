@@ -1,7 +1,8 @@
 
 #pragma once
-
+#ifndef WIN32_LEAN_AND_MENA
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
+#endif
 // Windows Header Files
 #include <windows.h>
 
@@ -14,12 +15,8 @@
 #include <DirectXColors.h>
 #include <DirectXPackedVector.h>
 #include <DirectXCollision.h>
+#include "d3dx12.h"
 
-// C RunTime Header Files
-#include <stdlib.h>
-#include <malloc.h>
-#include <memory.h>
-#include <tchar.h>
 
 // 
 #include <array>
